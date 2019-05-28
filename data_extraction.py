@@ -4,6 +4,7 @@ import selenium
 import random
 from selenium import *
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 driver = webdriver.Chrome('../BarcodeScanning/chromedriver')
 #driver.add_argument('— incognito')
 
@@ -62,18 +63,13 @@ with open('inventory_data.csv', mode='w') as inventory:
                 page = 'https://octopart.com/distributors/mouser'
             print(product_number[0])
             driver.get(page)
-            #clickSpotNum = random.randint(0,4)
-            #randClickButton = driver.find_element_by_id(randClicks[clickSpotNum])
-            #randClickButton.click()
             search_box = driver.find_element_by_xpath("//input[@class='search-input']")
             search_box.send_keys(product_number)
             search_button = driver.find_element_by_xpath("//button[@class='search-button']")
             search_button.click()
             try:
                 elem = driver.find_element_by_xpath("//div[@class='nrf-alert']")
-            except nosuchelementexception:
-
-                nrf = driver.find_element_by_xpath("//")
+            except NoSuchElementException:
                 specs_button = driver.find_element_by_xpath("//button[@value='serp-grid']")
                 specs_button.click()
                 time = random.randint(5, 35)
@@ -156,8 +152,8 @@ with open('inventory_data.csv', mode='w') as inventory:
                     footprint_index = new_titles.index("Case/Package")
                     if footprint_index:
                         footprint = attributes[footprint_index]
-                    else:
-                        footprint = "/"
+                else:
+                    footprint = "/"
                 if "Number of Pins" in attribute_title_string:
                     pin_index = new_titles.index("Number of Pins")
                     pins = attributes[pin_index]
@@ -202,7 +198,7 @@ with open('inventory_data.csv', mode='w') as inventory:
 
 
 
-            ## Reference: Box #, Part Type, Vendor Part #, Manufacturer Part #, value, v_rating, c_rating, power rating, footprint, pitch, tmp_part, status, quantity, # of pins
+            ## Reference: Box #, Part Type, Vendor Part #, Manufacturer Part #, value, v_rating, c_rating, power rating, footprint, pitch, tmp_part, quantity, # of pins
             inventory_writer.writerow([box,category[0],product_number[0],m_product_number[0],val,v_rating,c_rating,p_rating,footprint,pitch,"/","/",quantity[0], pins])
 readFile.close()
 inventory.close()

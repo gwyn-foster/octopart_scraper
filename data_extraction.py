@@ -6,7 +6,6 @@ from selenium import *
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 driver = webdriver.Chrome('../BarcodeScanning/chromedriver')
-#driver.add_argument('— incognito')
 
 readFile = open("barcodes.rtf", "r")
 #input = raw_input("Scan the barcode now ")
@@ -19,6 +18,7 @@ randClicks = ['product-overview','qty','priced-in','additionalPackaging','nptRef
 pn_p = re.compile('(?<=\[\)>06P)(.+)(?=1P)')
 
 pn2_p = re.compile('(?<=P)(.+)(?<=-ND)')
+pn3_p = re.compile('(?<=06P1P)(.+)(?=6PXP)')
 
 ## Manufacterer Part Number
 mpn_p = re.compile('(?<=1P)(.+)(?=K1K)')
@@ -28,6 +28,7 @@ mpn3_p = re.compile('(?<=1P)(.+)(?=Q)')
 q_p = re.compile('(?=Q[^A-Z])(.+)(?=11Z)')
 q2_p = re.compile('(?<=Q)(.+)(?=13Z)')
 q3_p = re.compile('(?<=Q)(.+)(?=11K)')
+q4_p = re.compile('(?<=Q)(.+)(?=V00)')
 
 
 
@@ -35,7 +36,16 @@ with open('inventory_data.csv', mode='w') as inventory:
     inventory_writer = csv.writer(inventory, delimiter='\t', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     for line in readFile:
         if "K" in line:
-            if "[)>06P" in line:
+            if "[)>06P1P" in line: ## Texas Instruments
+                time = random.randint(5,20)
+
+                driver.implicitly_wait(time)
+                input = line
+                product_number = pn3_p.findall(input)
+                m_product_number = product_number
+                quantity = q4_p.findall(input)
+                page = 'https://octopart.com/manufacturers/texas-instruments'
+            elif "[)>06P" in line:
                 time = random.randint(5, 35)
 
                 driver.implicitly_wait(time)
@@ -195,10 +205,6 @@ with open('inventory_data.csv', mode='w') as inventory:
                 else:
                     c_rating = "/"
 
-
-
-
-            ## Reference: Box #, Part Type, Vendor Part #, Manufacturer Part #, value, v_rating, c_rating, power rating, footprint, pitch, tmp_part, quantity, # of pins
-            inventory_writer.writerow([box,category[0],product_number[0],m_product_number[0],val,v_rating,c_rating,p_rating,footprint,pitch,"/","/",quantity[0], pins])
+            inventory_writer.writerow([box,category[0],product_number[0],m_product_number[0],val,v_rating,c_rating,p_rating,footprint,pitch,"/",quantity[0], pins])
 readFile.close()
 inventory.close()

@@ -1,10 +1,23 @@
 # octopart_scraper
 
 
-This scraper takes a .rtf file with a list of Digikey or Mouser barcodes and outputs a nice tidy .csv file with the column headings 
+## data_extraction.py
+Used to populate the inventory using Digikey and Mouser product barcodes.
 
-Reference: Box #, Part Type, Vendor Part #, Manufacturer Part #, value, v_rating, c_rating, power rating, footprint, pitch, tmp_part, quantity, # of pins
+Download chrome driver from here: http://chromedriver.chromium.org/downloads, make sure you choose the version of chromedriver that matches your version of chrome. 
+Move chromedriver to your path variable
+Make sure python is installed.
+Install selenium webdriver
+```
+	pip install selenium
+```
 
-Box number is based on a personal organization system and can be skipped no problem, as it TMP_Part      
-Maker sure this is all kept in a folder called BarcodeScanning. 
-You must install chromedriver in the same folder, download link is here: http://chromedriver.chromium.org/downloads
+Scan all of the barcodes, one per line, into barcodes.rtf.
+From your terminal:
+```
+	cd BarcodeScanning
+	python data_extraction.py
+```
+The program will run and populate inventory_data.csv.
+Remember that inventory_data.csv writes over itself each time the program is run, it is recommended that you import the data to a program like google sheets or excel.
+The current inventory system lives here: https://docs.google.com/spreadsheets/d/1A6ifZcomC8NqROrL8iVcI6v9OyIxaCGkF_3Vy-p0OTQ/edit?usp=sharing

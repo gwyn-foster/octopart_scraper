@@ -2,10 +2,18 @@ import re
 import csv
 import selenium
 import random
+import os
 from selenium import *
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-driver = webdriver.Chrome('../BarcodeScanning/chromedriver')
+
+if os.name == 'posix':                           #for MAC
+    print("Using mac")
+    driver = webdriver.Chrome('/usr/local/bin/chromedriver')
+    print("opened a session")
+else:                                               #Windows
+    driver = webdriver.Chrome('chromedriver')
+
 
 readFile = open("barcodes.rtf", "r")
 #input = raw_input("Scan the barcode now ")
@@ -15,20 +23,21 @@ randClicks = ['product-overview','qty','priced-in','additionalPackaging','nptRef
 
 
 ## Get product number
-pn_p = re.compile('(?<=\[\)>06P)(.+)(?=1P)')
+pn_p = re.compile('(?<=\[\)>06P)(.+)(?=1P)') #digikey barcodes
 
-pn2_p = re.compile('(?<=P)(.+)(?<=-ND)')
-pn3_p = re.compile('(?<=06P1P)(.+)(?=6PXP)')
+pn2_p = re.compile('(?<=P)(.+)(?<=-ND)') #old digikey barcodes
+pn3_p = re.compile('(?<=06P1P)(.+)(?=6PXP)') #TI barcodes
+pn4_p = re.compile('(?<=06P1P)(.+)(?=6PTP)')  # TI barcodes
 
 ## Manufacterer Part Number
-mpn_p = re.compile('(?<=1P)(.+)(?=K1K)')
-mpn2_p = re.compile('(?<=1P)(.+)(?=9D)')
-mpn3_p = re.compile('(?<=1P)(.+)(?=Q)')
+mpn_p = re.compile('(?<=1P)(.+)(?=K1K)') #Digikey
+mpn2_p = re.compile('(?<=1P)(.+)(?=9D)') #Old Digikey
+mpn3_p = re.compile('(?<=1P)(.+)(?=Q)')  #mouser
 ## Quanitity
-q_p = re.compile('(?=Q[^A-Z])(.+)(?=11Z)')
-q2_p = re.compile('(?<=Q)(.+)(?=13Z)')
-q3_p = re.compile('(?<=Q)(.+)(?=11K)')
-q4_p = re.compile('(?<=Q)(.+)(?=V00)')
+q_p = re.compile('(?=Q[^A-Z])(.+)(?=11Z)') #Digikey
+q2_p = re.compile('(?<=Q)(.+)(?=13Z)')  #Old Digikey
+q3_p = re.compile('(?<=Q)(.+)(?=11K)') #Mouser
+q4_p = re.compile('(?<=Q)(.+)(?=V00)') #Texas Instruments
 
 
 
@@ -37,15 +46,23 @@ with open('inventory_data.csv', mode='w') as inventory:
     for line in readFile:
         if "K" in line:
             if "[)>06P1P" in line: ## Texas Instruments
+
                 time = random.randint(5,20)
 
                 driver.implicitly_wait(time)
                 input = line
-                product_number = pn3_p.findall(input)
+                if "PXP" in line:
+                    product_number = pn3_p.findall(input)
+                else:
+                    product_number = pn4_p.findall(input)
+                print(product_number)
                 m_product_number = product_number
                 quantity = q4_p.findall(input)
-                page = 'https://octopart.com/manufacturers/texas-instruments'
-            elif "[)>06P" in line:
+
+                page = 'http://octopart.com/manufacturers/texas-instruments'
+
+                print('Opening TI Page')
+            elif "[)>06P" in line: #### Probably new digi-key
                 time = random.randint(5, 35)
 
                 driver.implicitly_wait(time)
@@ -53,7 +70,8 @@ with open('inventory_data.csv', mode='w') as inventory:
                 product_number = pn_p.findall(input)
                 m_product_number = mpn_p.findall(input)
                 quantity = q_p.findall(input)
-                page = 'https://octopart.com/distributors/digi-key'
+                page = 'http://octopart.com/distributors/digi-key'
+                print('Opening Digikey Page')
             elif "[)>06J" in line: ## Old digikey barcode
                 time = random.randint(5, 35)
 
@@ -62,7 +80,8 @@ with open('inventory_data.csv', mode='w') as inventory:
                 product_number = pn2_p.findall(input)
                 m_product_number = mpn2_p.findall(input)
                 quantity = q2_p.findall(input)
-                page = 'https://octopart.com/distributors/digi-key'
+                page = 'http://octopart.com/distributors/digi-key'
+                print('Opening DigiKey Page')
             elif ">[)>06K" in line: ##Mouser item
                 time = random.randint(5, 35)
                 driver.implicitly_wait(time)
@@ -70,7 +89,8 @@ with open('inventory_data.csv', mode='w') as inventory:
                 m_product_number = mpn3_p.findall(input)
                 product_number = m_product_number
                 quantity = q3_p.findall(input)
-                page = 'https://octopart.com/distributors/mouser'
+                page = 'http://octopart.com/distributors/mouser'
+                print('Opening Mouser Page')
             print(product_number[0])
             driver.get(page)
             search_box = driver.find_element_by_xpath("//input[@class='search-input']")
@@ -204,7 +224,10 @@ with open('inventory_data.csv', mode='w') as inventory:
                     c_rating = attributes[c_rating_index]
                 else:
                     c_rating = "/"
-
+                if "q" in quantity:
+                    quantity = quantity[1:]
+                elif "Q" in quantity:
+                    quantity = quantity[1:]
             inventory_writer.writerow([box,category[0],product_number[0],m_product_number[0],val,v_rating,c_rating,p_rating,footprint,pitch,"/",quantity[0], pins])
 readFile.close()
 inventory.close()

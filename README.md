@@ -20,4 +20,3 @@ From your terminal:
 ```
 The program will run and populate inventory_data.csv.
 Remember that inventory_data.csv writes over itself each time the program is run, it is recommended that you import the data to a program like google sheets or excel.
-The current inventory system lives here: https://docs.google.com/spreadsheets/d/1A6ifZcomC8NqROrL8iVcI6v9OyIxaCGkF_3Vy-p0OTQ/edit?usp=sharing
